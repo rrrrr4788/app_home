@@ -54,8 +54,21 @@ class Task(ButtonBehavior, BoxLayout):
     def __init__(self, **kw):
         super().__init__(**kw)
 
+        self.bind(on_release=lambda x: self.view_task())
+
+    def view_task(self):
+        vt = ViewTask()
+        vt.ids.name.text = self.name
+        vt.ids.time.text = self.time
+        vt.ids.date.text = self.date
+        vt.open()
+
 
 class Upcoming(Task):
+    pass
+
+
+class ViewTask(ModalView):
     pass
 
 
@@ -137,6 +150,38 @@ class MainWindow (BoxLayout):
             return True
         else:
             return False
+
+    def get_update(self, inst):
+        nt = NewTask()
+        nt.ids.task_name.text = inst.name
+        nt.ids.task_time.text = inst.time
+        nt.ids.task_date.text = inst.date
+        nt.ids.submit_wrapper.clear_widgets()
+        submit = Button(text='Update Task', background_normal='',
+                        background_color=rgba('#0e5174'))
+        submit.bind(on_release=lambda x: self.update_task(inst))
+        nt.ids.submit_wrapper.add_widget(submit)
+        nt.open()
+
+    def update_task(self, task_data, task):
+        error = False
+        xtask = [
+            task_data.ids.task_name.text,
+            task_data.ids.task_date.text,
+            task_data.ids.task_time.text
+        ]
+        for t in xtask:
+            if len(t.text) < 3:
+                t.hint_text = 'Field required'
+                t.hint.text_color = [1, 0, 0, 1]
+                error = True
+        if error:
+            pass
+        else:
+            if self.db.update_task(xtask):
+                task.name = task_data.ids.task_name.text
+                task.date = task_data.ids.task_date.text,
+                task.time = task_data.ids.task_time.text
 
     def delete_task(self, task: Today):
         name = task.name
