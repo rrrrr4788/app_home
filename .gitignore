@@ -1,0 +1,7 @@
+./.vs
+./.vscode
+./original.zip
+./original.txt
+./app/storage/db.sqlite
+./app/storage/__pycache__/*
+./app/__pycache__/*

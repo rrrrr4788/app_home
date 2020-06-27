@@ -90,7 +90,6 @@ class Database(object):
             date=?
             WHERE name=?
             '''
-            task.append(task[0])
             cur.execute(sql, task)
             conn.commit()
             return True

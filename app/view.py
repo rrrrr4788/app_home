@@ -48,6 +48,7 @@ class NewButton(ButtonBehavior, BoxLayout):
 
 class Task(ButtonBehavior, BoxLayout):
     name = StringProperty('')
+    og_name = StringProperty('')
     time = StringProperty('')
     date = StringProperty('')
 
@@ -94,6 +95,7 @@ class MainWindow (BoxLayout):
 
             if self.clean_date(date):
                 task = Today()
+                task.og_name = t[1]
                 task.name = t[1].upper()
                 task.time = time
                 task.date = date
@@ -101,6 +103,7 @@ class MainWindow (BoxLayout):
                 task.size = [scroll_parent.width/2.4, 45]
 
                 itask = Today()
+                itask.og_name = t[1]
                 itask.name = t[1].upper()
                 itask.time = time
                 itask.date = date
@@ -113,14 +116,16 @@ class MainWindow (BoxLayout):
 
             else:
                 task = Upcoming()
-                task.name = t[1]
+                task.name = t[1].upper()
+                task.og_name = t[1]
                 task.time = ' '.join([date, time])
                 task.date = date
                 task.size_hint = (1, None)
                 task.height = dp(100)
 
                 itask = Upcoming()
-                itask.name = t[1]
+                itask.name = t[1].upper()
+                itask.og_name = t[1]
                 itask.time = ' '.join([date, time])
                 itask.date = date
                 itask.size_hint = (1, None)
@@ -159,7 +164,7 @@ class MainWindow (BoxLayout):
         nt.ids.submit_wrapper.clear_widgets()
         submit = Button(text='Update Task', background_normal='',
                         background_color=rgba('#0e5174'))
-        submit.bind(on_release=lambda x: self.update_task(inst))
+        submit.bind(on_release=lambda x: self.update_task(nt, inst))
         nt.ids.submit_wrapper.add_widget(submit)
         nt.open()
 
@@ -171,17 +176,19 @@ class MainWindow (BoxLayout):
             task_data.ids.task_time.text
         ]
         for t in xtask:
-            if len(t.text) < 3:
+            if len(t) < 3:
                 t.hint_text = 'Field required'
                 t.hint.text_color = [1, 0, 0, 1]
                 error = True
         if error:
             pass
         else:
+            xtask = [xtask[0], ' '.join(xtask[1:]), task.og_name]
             if self.db.update_task(xtask):
                 task.name = task_data.ids.task_name.text
-                task.date = task_data.ids.task_date.text,
+                task.date = task_data.ids.task_date.text
                 task.time = task_data.ids.task_time.text
+            task_data.dismiss()
 
     def delete_task(self, task: Today):
         name = task.name
@@ -196,6 +203,7 @@ class MainWindow (BoxLayout):
         error = False
         scroll_parent = self.ids.scroll_parent
         tw = self.ids.today_wrapper
+        uw = self.ids.upcoming
 
         for t in xtask:
             if len(t.text) < 3:
@@ -205,18 +213,32 @@ class MainWindow (BoxLayout):
         if error:
             pass
         else:
-            task = Today()
-            task.name = xtask[0].text
-            task.time = xtask[2].text
-            task.date = xtask[1].text
-            task.size_hint = (None, None)
-            task.size = [scroll_parent.width/2.4, scroll_parent.height * .9]
-
-            # add task to db
             date = ' '.join([xtask[1].text, xtask[2].text])
             task_ = (xtask[0].text, date)
-            if self.db.add_task(task_):
-                tw.add_widget(task)
+            if self.clean_date(xtask[1].text):
+                task = Today()
+                task.og_name = xtask[0].text
+                task.name = xtask[0].text.upper()
+                task.time = xtask[2].text
+                task.date = xtask[1].text
+                task.size_hint = (None, None)
+                task.size = [scroll_parent.width /
+                             2.4, scroll_parent.height * .9]
+                if self.db.add_task(task_):
+                    tw.add_widget(task)
+            else:
+                task = Upcoming()
+                task.og_name = xtask[0].text
+                task.name = xtask[0].text.upper()
+                task.time = xtask[2].text
+                task.date = xtask[1].text
+                task.size_hint = (1, None)
+                task.height = dp(100)
+                if self.db.add_task(task_):
+                    uw.add_widget(task)
+
+            # add task to db
+
             mv.dismiss()
 
             # check if we have enough tasks to show
@@ -225,8 +247,22 @@ class MainWindow (BoxLayout):
                     if type(child) == NewButton:
                         tw.remove_widget(child)
 
+    def add_user(self, username, password):
+        if len(username.text) < 3 or len(password.text) < 6:
+            pass
+        else:
+            user = (username.text, password.text)
+
+            if self.db.add_user(user):
+                self.ids.scrn_mngr.current = 'scrn_signin'
+
     def auth_user(self, username, password):
         uname = username.text
         upass = password.text
 
-        self.ids.scrn_mngr.current = 'scrn_main'
+        if self.db.auth_user((uname, upass)):
+
+            self.ids.scrn_mngr.current = 'scrn_main'
+
+        username.text = ''
+        password.text = ''

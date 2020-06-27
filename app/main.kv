@@ -122,10 +122,10 @@
 					Widget:
 						size_hint_y: .3
 					FlatButton: 
-						text: 'Sign up'
+						text: 'Sign Up'
 						size_hint_y: .2
 						color: rgba('#0e1574ff')
-						
+						on_release: root.add_user(su_username, su_password)
 						canvas.before:
 							Color:
 								rgba: rgba('#ffffff')
@@ -233,11 +233,11 @@
 										spacing: ['10dp']
 										size: self.minimum_size
 										size_hint: (None, None)
-										Today:
-											name: 'Task 1 f43vf3f'
-											time: '10:24'
-											size_hint: (None, None)
-											size: [scroll_parent.width/2.4, scroll_parent.height *.9]
+										# Today:
+										# 	name: 'Task 1 f43vf3f'
+										# 	time: '10:24'
+										# 	size_hint: (None, None)
+										# 	size: [scroll_parent.width/2.4, scroll_parent.height *.9]
 										NewButton:
 											on_release: root.add_new()
 											size_hint: (None, None)
